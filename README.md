@@ -12,8 +12,11 @@ perguntas de negócio via *traversal* (não apenas busca por nó).
 | `setup.cypher` | Cria constraints e popula o grafo |
 | `load_graph.py` | Executa o `setup.cypher` inteiro no Aura numa única chamada |
 | `querys/querys.cypher` | Queries de negócio e de visualização |
+| `querys/transversal.cypher` | Query para responder a pergunta de negócio com transversal |
 | `diagrams/` | PNGs gerados (query1.png, query2.png, ...) |
 | `.env.example` | Modelo das variáveis de ambiente  |
+| `seed.cypher` | Popula o banco para responder a pergunta de negócio com transversal  |
+
 
 ## 1. Modelo de grafo
 
@@ -29,6 +32,35 @@ perguntas de negócio via *traversal* (não apenas busca por nó).
 de um hábito variam **por usuário**, não pelo hábito em si. Por isso não há
 relação direta `Habit -[:ON_DAY]-> Day` nem `User -[:PRACTICES]-> Habit` — só
 existiria uma fonte de verdade duplicada.
+
+### Entidades do grafo
+
+| Nó | Representação |
+|---|---|
+| `User` | Usuário do sistema |
+| `Property` | Imóvel associado ao usuário |
+| `Address` | Endereço do imóvel |
+| `Region` | Região onde o imóvel está localizado |
+| `RegionRate` | Tarifa de água da região |
+| `Device` | Dispositivo instalado no imóvel |
+| `WaterBill` | Fatura de água do usuário |
+| `Habit` | Tipo de hábito relacionado ao consumo de água |
+| `UserHabit` | Relação entre usuário e hábito, armazenando a frequência |
+| `Day` | Dia da semana em que o hábito é praticado |
+
+### Relacionamentos
+
+| Relacionamento | Significado |
+|---|---|
+| `OWNS` | Usuário possui um imóvel |
+| `LOCATED_AT` | Imóvel está localizado em um endereço |
+| `IN_REGION` | Endereço pertence a uma região |
+| `HAS_RATE` | Região possui uma tarifa |
+| `HAS_DEVICE` | Imóvel possui um dispositivo |
+| `HAS_BILL` | Usuário possui uma fatura |
+| `HAS_HABIT` | Usuário possui um hábito registrado |
+| `IS_HABIT` | `UserHabit` representa determinado hábito |
+| `ON_DAY` | Hábito do usuário ocorre em determinado dia |
 
 ## 2. Como obter as credenciais do Aura
 
@@ -53,7 +85,7 @@ python load_graph.py setup.cypher
 Isso roda todas as instruções do `setup.cypher` em sequência (constraints,
 dados, relacionamentos).
 
-## 4. Pergunta de negócio e Traversal
+## 4. Pergunta de negócio com Traversal
 
 Uma das perguntas de negócio respondidas pelo grafo é:
 
