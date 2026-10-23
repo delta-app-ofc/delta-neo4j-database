@@ -1,27 +1,30 @@
 # Modelo em Grafo (Neo4j)
 
-Este diretório contém a modelagem em grafo do projeto (equivalente ao schema
+Este diretório contém a modelagem em grafo do projeto DELTA (equivalente ao schema
 relacional em SQL), o script de carga (`setup.cypher`), o loader Python para
 rodar tudo de uma vez no Neo4j Aura, e as queries usadas para responder
 perguntas de negócio via *traversal* (não apenas busca por nó).
+
+> Documentação completa: [`delta-handbook/DADOS/NoSQL/modelagem-neo4j.md`](https://github.com/DELTA-docs/delta-handbook/blob/main/DADOS/NoSQL/modelagem-neo4j.md)
 
 ## Arquivos
 
 | Arquivo | O que é |
 |---|---|
-| `setup.cypher` | Cria constraints e popula o grafo |
-| `load_graph.py` | Executa o `setup.cypher` inteiro no Aura numa única chamada |
-| `querys/querys.cypher` | Queries de negócio e de visualização |
-| `querys/transversal.cypher` | Query para responder a pergunta de negócio com transversal |
+| `setup.cypher` | Cria constraints, popula o grafo base com MERGE (idempotente) |
+| `seed.cypher` | Adiciona usuários e dados adicionais para enriquecer o grafo |
+| `load_graph.py` | Executa qualquer `.cypher` inteiro no Aura via Python |
+| `querys/querys.cypher` | Queries de negócio e visualização (8 queries) |
+| `querys/transversal.cypher` | Query transversal da pergunta de negócio principal |
+| `.env.example` | Modelo das variáveis de ambiente |
 | `diagrams/` | PNGs gerados (query1.png, query2.png, ...) |
-| `.env.example` | Modelo das variáveis de ambiente  |
-| `seed.cypher` | Popula o banco para responder a pergunta de negócio com transversal  |
 
 
 ## 1. Modelo de grafo
 
 ```
-(User)-[:OWNS]->(Property)-[:LOCATED_AT]->(Address)-[:IN_REGION]->(Region)-[:HAS_RATE]->(RegionRate)
+(User:Pessoa)-[:OWNS]->(Property:Casa|Predio:Residencial)
+(Property)-[:LOCATED_AT]->(Address)-[:IN_REGION]->(Region)-[:HAS_RATE]->(RegionRate)
 (Property)-[:HAS_DEVICE]->(Device)
 (User)-[:HAS_BILL]->(WaterBill)
 (User)-[:HAS_HABIT]->(UserHabit)-[:IS_HABIT]->(Habit)
@@ -29,31 +32,43 @@ perguntas de negócio via *traversal* (não apenas busca por nó).
 ```
 
 `UserHabit` é um nó de interseção: existe porque frequência e dias da semana
-de um hábito variam **por usuário**, não pelo hábito em si. Por isso não há
-relação direta `Habit -[:ON_DAY]-> Day` nem `User -[:PRACTICES]-> Habit` — só
-existiria uma fonte de verdade duplicada.
+de um hábito variam **por usuário**, não pelo hábito em si.
+
+### Multi-labels
+
+Todo `User` também carrega o label `:Pessoa`, permitindo buscas genéricas por
+entidades humanas. Os imóveis usam labels para tipo e classificação:
+
+| Label | Significado |
+|---|---|
+| `:Casa` | Imóvel do tipo casa |
+| `:Predio` | Imóvel do tipo prédio/apartamento |
+| `:Residencial` | Classificação residencial |
+| `:Comercial` | Classificação comercial |
+
+Exemplo: `MATCH (p:Casa:Residencial)` filtra diretamente sem varredura por propriedade de texto.
 
 ### Entidades do grafo
 
-| Nó | Representação |
-|---|---|
-| `User` | Usuário do sistema |
-| `Property` | Imóvel associado ao usuário |
-| `Address` | Endereço do imóvel |
-| `Region` | Região onde o imóvel está localizado |
-| `RegionRate` | Tarifa de água da região |
-| `Device` | Dispositivo instalado no imóvel |
-| `WaterBill` | Fatura de água do usuário |
-| `Habit` | Tipo de hábito relacionado ao consumo de água |
-| `UserHabit` | Relação entre usuário e hábito, armazenando a frequência |
-| `Day` | Dia da semana em que o hábito é praticado |
+| Nó | Labels | Representação |
+|---|---|---|
+| `User` | `:User:Pessoa` | Usuário do sistema |
+| `Property` | `:Property:Casa:Residencial` ou `:Property:Predio:Residencial` | Imóvel associado ao usuário |
+| `Address` | `:Address` | Endereço do imóvel |
+| `Region` | `:Region` | Região onde o imóvel está localizado |
+| `RegionRate` | `:RegionRate` | Tarifa de água da região |
+| `Device` | `:Device` | Dispositivo instalado no imóvel |
+| `WaterBill` | `:WaterBill` | Fatura de água do usuário |
+| `Habit` | `:Habit` | Tipo de hábito do catálogo |
+| `UserHabit` | `:UserHabit` | Relação usuário-hábito com frequência |
+| `Day` | `:Day` | Dia da semana |
 
 ### Relacionamentos
 
 | Relacionamento | Significado |
 |---|---|
 | `OWNS` | Usuário possui um imóvel |
-| `LOCATED_AT` | Imóvel está localizado em um endereço |
+| `LOCATED_AT` | Imóvel está em um endereço |
 | `IN_REGION` | Endereço pertence a uma região |
 | `HAS_RATE` | Região possui uma tarifa |
 | `HAS_DEVICE` | Imóvel possui um dispositivo |
@@ -62,70 +77,42 @@ existiria uma fonte de verdade duplicada.
 | `IS_HABIT` | `UserHabit` representa determinado hábito |
 | `ON_DAY` | Hábito do usuário ocorre em determinado dia |
 
+
 ## 2. Como obter as credenciais do Aura
 
 1. Acesse [console.neo4j.io](https://console.neo4j.io) e faça login.
 2. Clique na sua instância na lista de *Instances*.
-3. Copie o campo **Connection URI** (começa com `neo4j+s://` e termina em
-   `.databases.neo4j.io`) → isso é o `NEO4J_URI`.
-4. O `NEO4J_USER` quase sempre é `neo4j` (usuário padrão).
-5. A `NEO4J_PASSWORD` só aparece **uma vez**, no momento da criação da
-   instância. Se você perdeu, use o botão **Reset DB Password** na página da
-   instância para gerar uma nova (ela também só aparece uma vez — copie na
-   hora).
+3. Copie o campo **Connection URI** (começa com `neo4j+s://`) → `NEO4J_URI`.
+4. O `NEO4J_USER` e `NEO4J_DATABASE` são o ID da instância (ex: `a6b95128`).
+5. A `NEO4J_PASSWORD` só aparece **uma vez**, na criação da instância. Se perdeu,
+   use o botão **Reset DB Password** na página da instância.
+
+Copie o `.env.example` para `.env` e preencha:
+
+```
+NEO4J_URI=neo4j+s://<instance-id>.databases.neo4j.io
+NEO4J_USER=<instance-id>
+NEO4J_PASSWORD=<senha>
+NEO4J_DATABASE=<instance-id>
+```
+
 
 ## 3. Popular o banco
 
 ```bash
-pip install neo4j --break-system-packages
+pip install neo4j python-dotenv
 
 python load_graph.py setup.cypher
+python load_graph.py seed.cypher
 ```
 
-Isso roda todas as instruções do `setup.cypher` em sequência (constraints,
-dados, relacionamentos).
+O `setup.cypher` usa `MERGE` em todos os nós de referência — pode ser
+re-executado sem duplicar dados.
+
 
 ## 4. Pergunta de negócio com Traversal
 
-Uma das perguntas de negócio respondidas pelo grafo é:
-
 > **Quais usuários possuem hábitos praticados aos sábados e moram em regiões onde a tarifa de água é superior a R$ 8,00 por m³?**
-
-Essa pergunta combina informações de diferentes partes do grafo. Para respondê-la, é necessário percorrer vários relacionamentos entre os nós.
-
-O caminho relacionado aos hábitos é:
-
-```text
-User
-  ↓ HAS_HABIT
-UserHabit
-  ↓ ON_DAY
-Day (SÁBADO)
-```
-
-A partir do `UserHabit`, também é possível descobrir qual hábito está sendo praticado:
-
-```text
-UserHabit
-  ↓ IS_HABIT
-Habit
-```
-
-Além disso, é necessário descobrir a região onde o usuário está localizado e a tarifa correspondente:
-
-```text
-User
-  ↓ OWNS
-Property
-  ↓ LOCATED_AT
-Address
-  ↓ IN_REGION
-Region
-  ↓ HAS_RATE
-RegionRate
-```
-
-A consulta utilizada é:
 
 ```cypher
 MATCH (u:User)-[:HAS_HABIT]->(uh:UserHabit)-[:ON_DAY]->(d:Day {name: "SÁBADO"})
@@ -139,33 +126,30 @@ RETURN
     rr.m3Value AS tarifa;
 ```
 
-### Por que essa consulta é um Traversal?
-
-A consulta não realiza apenas uma busca por um nó específico. Ela percorre diferentes nós e relacionamentos do grafo para cruzar informações sobre usuários, hábitos, dias, imóveis, endereços, regiões e tarifas.
-
-O traversal pode ser representado da seguinte forma:
+O traversal percorre:
 
 ```text
-                    ┌── UserHabit ── Day
-                   /
-User ─────────────
+                    ┌── UserHabit ── Day (SÁBADO)
+                   /         \
+User ─────────────             Habit
                    \
-                    └── Property ── Address ── Region ── RegionRate
+                    └── Property ── Address ── Region ── RegionRate (> 8.00)
 ```
 
-Dessa forma, a consulta utiliza a estrutura de relacionamentos do Neo4j para encontrar usuários que praticam hábitos aos sábados e que estão associados a regiões com tarifa superior a R$ 8,00 por m³.
 
 ## 5. Estrutura do repositório
 
 ```
 delta-neo4j/
-  ├── setup.cypher
-  ├── load_graph.py
+  ├── setup.cypher         # modelo base (idempotente com MERGE)
+  ├── seed.cypher          # dados adicionais
+  ├── load_graph.py        # executor Python
   ├── .env.example
-  ├── .gitignore         
+  ├── .gitignore           # .env está ignorado
   ├── README.md
   ├── querys/
-  │   └── querys.cypher
+  │   ├── querys.cypher    # 8 queries de negócio
+  │   └── transversal.cypher
   └── diagrams/
       ├── query1.png
       ├── query2.png
