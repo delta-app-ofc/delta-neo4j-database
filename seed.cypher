@@ -109,9 +109,10 @@ MERGE (a)-[:IN_REGION]->(r);
 
 // Carlos pratica LAVAR CARRO aos sábados
 MATCH (u:User {id: 4}), (h:Habit {id: 5})
-CREATE (uh:UserHabit {id: 7, frequency: 2})
-CREATE (u)-[:HAS_HABIT]->(uh)
-CREATE (uh)-[:IS_HABIT]->(h);
+MERGE (uh:UserHabit {id: 7})
+SET uh.frequency = 2
+MERGE (u)-[:HAS_HABIT]->(uh)
+MERGE (uh)-[:IS_HABIT]->(h);
 
 MATCH (uh:UserHabit {id: 7}), (d:Day {id: 6})
 MERGE (uh)-[:ON_DAY]->(d);
@@ -119,9 +120,10 @@ MERGE (uh)-[:ON_DAY]->(d);
 
 // Beatriz pratica BANHO LONGO aos sábados
 MATCH (u:User {id: 5}), (h:Habit {id: 1})
-CREATE (uh:UserHabit {id: 8, frequency: 4})
-CREATE (u)-[:HAS_HABIT]->(uh)
-CREATE (uh)-[:IS_HABIT]->(h);
+MERGE (uh:UserHabit {id: 8})
+SET uh.frequency = 4
+MERGE (u)-[:HAS_HABIT]->(uh)
+MERGE (uh)-[:IS_HABIT]->(h);
 
 MATCH (uh:UserHabit {id: 8}), (d:Day {id: 6})
 MERGE (uh)-[:ON_DAY]->(d);
@@ -129,9 +131,10 @@ MERGE (uh)-[:ON_DAY]->(d);
 
 // Lucas pratica LAVAR QUINTAL aos sábados
 MATCH (u:User {id: 6}), (h:Habit {id: 2})
-CREATE (uh:UserHabit {id: 9, frequency: 3})
-CREATE (u)-[:HAS_HABIT]->(uh)
-CREATE (uh)-[:IS_HABIT]->(h);
+MERGE (uh:UserHabit {id: 9})
+SET uh.frequency = 3
+MERGE (u)-[:HAS_HABIT]->(uh)
+MERGE (uh)-[:IS_HABIT]->(h);
 
 MATCH (uh:UserHabit {id: 9}), (d:Day {id: 6})
 MERGE (uh)-[:ON_DAY]->(d);
@@ -139,9 +142,10 @@ MERGE (uh)-[:ON_DAY]->(d);
 
 // Julia pratica LAVAR LOUÇA aos sábados
 MATCH (u:User {id: 7}), (h:Habit {id: 6})
-CREATE (uh:UserHabit {id: 10, frequency: 5})
-CREATE (u)-[:HAS_HABIT]->(uh)
-CREATE (uh)-[:IS_HABIT]->(h);
+MERGE (uh:UserHabit {id: 10})
+SET uh.frequency = 5
+MERGE (u)-[:HAS_HABIT]->(uh)
+MERGE (uh)-[:IS_HABIT]->(h);
 
 MATCH (uh:UserHabit {id: 10}), (d:Day {id: 6})
 MERGE (uh)-[:ON_DAY]->(d);

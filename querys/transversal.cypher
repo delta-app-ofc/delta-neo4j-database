@@ -8,7 +8,7 @@ MATCH (u:User)-[:HAS_HABIT]->(uh:UserHabit)-[:ON_DAY]->(d:Day {name: "SÁBADO"})
 MATCH (uh)-[:IS_HABIT]->(h:Habit)
 MATCH (u)-[:OWNS]->(:Property)-[:LOCATED_AT]->(:Address)-[:IN_REGION]->(r:Region)-[:HAS_RATE]->(rr:RegionRate)
 WHERE rr.m3Value > 8.00
-RETURN
+RETURN DISTINCT
     u.name AS usuario,
     h.name AS habito,
     r.name AS regiao,

@@ -1,6 +1,6 @@
 // QUERY 1 - visualizar todos os grafos
 MATCH (n)-[r]->(m)
-RETURN n, r, m
+RETURN n, r, m;
 
 // QUERY 2 - ver posse de imóvel, região e dispositivo instalado
 MATCH (u:User)-[o:OWNS]->(p:Property)
@@ -35,9 +35,9 @@ MATCH (a:Address)-[:IN_REGION]->(r)
 MATCH (prop:Property)-[:LOCATED_AT]->(a)
 MATCH (u:User)-[:OWNS]->(prop)
 MATCH (u)-[:HAS_BILL]->(b:WaterBill)
-WITH r.name AS regiao, rr.m3Value AS tarifaM3, COLLECT(b.totalValue) AS faturas
-UNWIND faturas AS valorFatura
-RETURN regiao, tarifaM3, SUM(valorFatura) AS totalConsumo, COUNT(valorFatura) AS qtdFaturas
+WITH r.name AS regiao, rr.m3Value AS tarifaM3, COLLECT(b.m3Value) AS consumos
+UNWIND consumos AS consumo
+RETURN regiao, tarifaM3, SUM(consumo) AS totalConsumoM3, COUNT(consumo) AS qtdFaturas
 ORDER BY totalConsumo DESC;
 
 // QUERY 8 - Hábitos mais frequentes por região (travessia transversal)

@@ -13,7 +13,9 @@ def executar_script(uri, usuario, senha, arquivo):
 
     driver = GraphDatabase.driver(uri, auth=(usuario, senha))
 
-    with driver.session() as session:
+    database = os.getenv("NEO4J_DATABASE")
+
+    with driver.session(database=database) as session:
         for comando in comandos:
             comando = comando.strip()
 

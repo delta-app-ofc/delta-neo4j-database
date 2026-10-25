@@ -11,7 +11,7 @@ perguntas de negócio via *traversal* (não apenas busca por nó).
 
 | Arquivo | O que é |
 |---|---|
-| `setup.cypher` | Cria constraints, popula o grafo base com MERGE (idempotente) |
+| `setup.cypher` | **Reset destrutivo**: apaga tudo e recria o grafo base (use apenas em banco de desenvolvimento) |
 | `seed.cypher` | Adiciona usuários e dados adicionais para enriquecer o grafo |
 | `load_graph.py` | Executa qualquer `.cypher` inteiro no Aura via Python |
 | `querys/querys.cypher` | Queries de negócio e visualização (8 queries) |
@@ -83,9 +83,10 @@ Exemplo: `MATCH (p:Casa:Residencial)` filtra diretamente sem varredura por propr
 1. Acesse [console.neo4j.io](https://console.neo4j.io) e faça login.
 2. Clique na sua instância na lista de *Instances*.
 3. Copie o campo **Connection URI** (começa com `neo4j+s://`) → `NEO4J_URI`.
-4. O `NEO4J_USER` e `NEO4J_DATABASE` são o ID da instância (ex: `a6b95128`).
-5. A `NEO4J_PASSWORD` só aparece **uma vez**, na criação da instância. Se perdeu,
-   use o botão **Reset DB Password** na página da instância.
+4. O `NEO4J_USER`, `NEO4J_PASSWORD` e `NEO4J_DATABASE` vêm do arquivo `.txt` de
+   credenciais gerado pelo Aura **no momento da criação** da instância — guarde-o.
+   Se perdeu a senha, use o botão **Reset DB Password** na página da instância
+   (uma nova senha é gerada e exibida uma única vez).
 
 Copie o `.env.example` para `.env` e preencha:
 
