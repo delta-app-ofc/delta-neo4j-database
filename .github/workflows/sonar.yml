@@ -35,7 +35,7 @@ jobs:
           mkdir -p reports
           python -m pytest -q \
             --junitxml=reports/junit.xml \
-            --cov=load_graph \
+            --cov=load_graph --cov-branch \
             --cov-report=xml:reports/coverage.xml \
             --cov-report=html:reports/htmlcov
       - name: Publicar relatórios
