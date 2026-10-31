@@ -101,7 +101,7 @@ NEO4J_DATABASE=<instance-id>
 ## 3. Popular o banco
 
 ```bash
-pip install neo4j python-dotenv
+pip install -r requirements.txt
 
 python load_graph.py setup.cypher
 python load_graph.py seed.cypher
@@ -109,6 +109,18 @@ python load_graph.py seed.cypher
 
 O `setup.cypher` usa `MERGE` em todos os nós de referência — pode ser
 re-executado sem duplicar dados.
+
+
+## Testes automatizados do loader
+
+Os testes unitários validam a divisão e execução dos comandos Cypher pelo `load_graph.py`, o uso do banco configurado e o fechamento do driver mesmo quando uma consulta falha. Eles substituem o driver por um dublê e não conectam ao Neo4j Aura.
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+A análise de cobertura instrumenta somente o loader Python. Os arquivos `.cypher` não são executados por esta suite e não recebem um percentual de cobertura.
 
 
 ## 4. Pergunta de negócio com Traversal
