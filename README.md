@@ -13,7 +13,7 @@ perguntas de negócio via *traversal* (não apenas busca por nó).
 |---|---|
 | `setup.cypher` | **Reset destrutivo**: apaga tudo e recria o grafo base (use apenas em banco de desenvolvimento) |
 | `seed.cypher` | Adiciona usuários e dados adicionais para enriquecer o grafo |
-| `load_graph.py` | Executa qualquer `.cypher` inteiro no Aura via Python |
+| `load_graph.py` | Executa os scripts Cypher versionados no Aura via Python |
 | `querys/querys.cypher` | Queries de negócio e visualização (8 queries) |
 | `querys/transversal.cypher` | Query transversal da pergunta de negócio principal |
 | `.env.example` | Modelo das variáveis de ambiente |
@@ -101,7 +101,7 @@ NEO4J_DATABASE=<instance-id>
 ## 3. Popular o banco
 
 ```bash
-pip install neo4j python-dotenv
+pip install -r requirements.txt
 
 python load_graph.py setup.cypher
 python load_graph.py seed.cypher
@@ -109,6 +109,18 @@ python load_graph.py seed.cypher
 
 O `setup.cypher` usa `MERGE` em todos os nós de referência — pode ser
 re-executado sem duplicar dados.
+
+
+## Testes automatizados do loader
+
+Os testes unitários validam a divisão e execução dos comandos Cypher pelo `load_graph.py`, o uso do banco configurado e o fechamento do driver mesmo quando uma consulta falha. Eles substituem o driver por um dublê e não conectam ao Neo4j Aura.
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+A análise de cobertura instrumenta somente o loader Python. Os arquivos `.cypher` não são executados por esta suite e não recebem um percentual de cobertura.
 
 
 ## 4. Pergunta de negócio com Traversal
@@ -157,3 +169,7 @@ delta-neo4j/
       ├── query3.png
       └── query4.png
 ```
+
+## Arquivos permitidos pelo loader
+
+O argumento seleciona um dos scripts versionados: `setup.cypher`, `seed.cypher`, `querys/querys.cypher` ou `querys/transversal.cypher`. Os caminhos sao resolvidos a partir do repositorio, independentemente do diretorio atual. Caminhos absolutos, travessia com `..`, arquivos externos e links cujo destino escape do repositorio ou deixe de ser Cypher sao rejeitados antes de ler o arquivo ou abrir o driver.
