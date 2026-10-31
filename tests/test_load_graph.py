@@ -49,7 +49,8 @@ def install_driver_factory(monkeypatch, driver, calls):
 
 
 def test_executar_script_runs_nonempty_commands_in_configured_database(tmp_path, monkeypatch, capsys):
-    cypher_file = tmp_path / "commands.cypher"
+    monkeypatch.setattr(load_graph, "SCRIPT_ROOT", tmp_path.resolve())
+    cypher_file = tmp_path / "setup.cypher"
     cypher_file.write_text(
         "CREATE (n:Example {name: 'first'});\nMATCH (n:Example) RETURN n;\n ;",
         encoding="utf-8",
@@ -59,7 +60,7 @@ def test_executar_script_runs_nonempty_commands_in_configured_database(tmp_path,
     monkeypatch.setenv("NEO4J_DATABASE", "test-database")
     install_driver_factory(monkeypatch, driver, driver_calls)
 
-    load_graph.executar_script("bolt://test", "test-user", "test-password", str(cypher_file))
+    load_graph.executar_script("bolt://test", "test-user", "test-password", "setup.cypher")
 
     assert driver_calls == [("bolt://test", ("test-user", "test-password"))]
     assert driver.database == "test-database"
@@ -72,14 +73,15 @@ def test_executar_script_runs_nonempty_commands_in_configured_database(tmp_path,
 
 
 def test_executar_script_closes_driver_when_a_query_fails(tmp_path, monkeypatch):
-    cypher_file = tmp_path / "commands.cypher"
+    monkeypatch.setattr(load_graph, "SCRIPT_ROOT", tmp_path.resolve())
+    cypher_file = tmp_path / "setup.cypher"
     cypher_file.write_text("RETURN 1;", encoding="utf-8")
     driver = RecordingDriver(fail_on="RETURN 1")
     install_driver_factory(monkeypatch, driver, [])
     monkeypatch.delenv("NEO4J_DATABASE", raising=False)
 
     with pytest.raises(RuntimeError, match="query failure"):
-        load_graph.executar_script("bolt://test", "test-user", "test-password", str(cypher_file))
+        load_graph.executar_script("bolt://test", "test-user", "test-password", "setup.cypher")
 
     assert driver.closed is True
 
@@ -145,3 +147,46 @@ def test_python_cli_usage_returns_nonzero_without_loading_dotenv(tmp_path):
 
     assert result.returncode == 2
     assert "python load_graph.py arquivo.cypher" in result.stdout
+
+
+@pytest.mark.parametrize("name", ["../secret.cypher", "..\\secret.cypher", "/tmp/secret.cypher", "C:/secret.cypher", "setup.cypher/../seed.cypher", "other.cypher", "setup.txt"])
+def test_rejects_unapproved_paths_before_reading_or_connecting(name, monkeypatch):
+    calls = []
+    monkeypatch.setattr(load_graph, "GraphDatabase", SimpleNamespace(driver=lambda *args, **kwargs: calls.append(args)))
+    with pytest.raises(ValueError, match="nao permitido"):
+        load_graph.executar_script("bolt://test", "test-user", "test-password", name)
+    assert calls == []
+
+
+def test_allowed_script_is_resolved_from_repository_not_cwd(tmp_path, monkeypatch):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "seed.cypher").write_text("RETURN 1;", encoding="utf-8")
+    monkeypatch.setattr(load_graph, "SCRIPT_ROOT", root.resolve())
+    monkeypatch.chdir(tmp_path)
+    assert load_graph._script_path("seed.cypher") == root / "seed.cypher"
+
+
+def test_rejects_resolved_path_outside_repository(tmp_path, monkeypatch):
+    root = tmp_path / "repo"
+    root.mkdir()
+    monkeypatch.setattr(load_graph, "SCRIPT_ROOT", root)
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Path, "resolve", lambda self, strict=False: tmp_path / "secret.cypher")
+        with pytest.raises(ValueError, match="dentro do repositorio"):
+            load_graph._script_path("setup.cypher")
+
+
+def test_rejects_symlink_target_with_non_cypher_extension(tmp_path, monkeypatch):
+    monkeypatch.setattr(load_graph, "SCRIPT_ROOT", tmp_path)
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Path, "resolve", lambda self, strict=False: tmp_path / ".env")
+        with pytest.raises(ValueError, match="extensao"):
+            load_graph._script_path("seed.cypher")
+
+
+def test_rejects_directory_named_as_allowed_script(tmp_path, monkeypatch):
+    (tmp_path / "setup.cypher").mkdir()
+    monkeypatch.setattr(load_graph, "SCRIPT_ROOT", tmp_path.resolve())
+    with pytest.raises(ValueError, match="arquivo regular"):
+        load_graph._script_path("setup.cypher")

@@ -13,7 +13,7 @@ perguntas de negócio via *traversal* (não apenas busca por nó).
 |---|---|
 | `setup.cypher` | **Reset destrutivo**: apaga tudo e recria o grafo base (use apenas em banco de desenvolvimento) |
 | `seed.cypher` | Adiciona usuários e dados adicionais para enriquecer o grafo |
-| `load_graph.py` | Executa qualquer `.cypher` inteiro no Aura via Python |
+| `load_graph.py` | Executa os scripts Cypher versionados no Aura via Python |
 | `querys/querys.cypher` | Queries de negócio e visualização (8 queries) |
 | `querys/transversal.cypher` | Query transversal da pergunta de negócio principal |
 | `.env.example` | Modelo das variáveis de ambiente |
@@ -169,3 +169,7 @@ delta-neo4j/
       ├── query3.png
       └── query4.png
 ```
+
+## Arquivos permitidos pelo loader
+
+O argumento seleciona um dos scripts versionados: `setup.cypher`, `seed.cypher`, `querys/querys.cypher` ou `querys/transversal.cypher`. Os caminhos sao resolvidos a partir do repositorio, independentemente do diretorio atual. Caminhos absolutos, travessia com `..`, arquivos externos e links cujo destino escape do repositorio ou deixe de ser Cypher sao rejeitados antes de ler o arquivo ou abrir o driver.
