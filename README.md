@@ -1,4 +1,30 @@
-# Modelo em Grafo (Neo4j)
+Delta | Banco de dados em grafo com Neo4j
+
+![Neo4j Aura](https://img.shields.io/badge/Neo4j-Aura-018BFF?logo=neo4j&logoColor=white) ![Cypher](https://img.shields.io/badge/linguagem-Cypher-333333) ![Python](https://img.shields.io/badge/loader-Python-3776AB?logo=python&logoColor=white)
+
+Modelagem em grafo do Projeto Delta, com scripts Cypher, carga de dados no Neo4j Aura e consultas de negócio por travessia de relacionamentos.
+
+**Tags:** `#Delta` `#Neo4j` `#Cypher` `#BancoDeDados` `#Grafo`
+
+## Sumário
+
+- [Visão geral](#visão-geral)
+- [Arquivos](#arquivos)
+- [Modelo de grafo](#1-modelo-de-grafo)
+- [Credenciais do Aura](#2-como-obter-as-credenciais-do-aura)
+- [Popular o banco](#3-popular-o-banco)
+- [Testes do loader](#testes-automatizados-do-loader)
+- [Pergunta de negócio](#4-pergunta-de-negócio-com-traversal)
+- [Estrutura](#5-estrutura-do-repositório)
+
+## Visão geral
+
+| Finalidade | Modelar relações entre usuários, imóveis, dispositivos, tarifas e hábitos para consultas por traversal. |
+| Tecnologia | Neo4j Aura, Cypher e loader Python. |
+| Entrada principal | `load_graph.py` executa os scripts Cypher versionados; `setup.cypher` reinicializa o grafo. |
+| Consultas | Arquivos em `querys/` incluem consultas de negócio e a pergunta principal do projeto. |
+
+---
 
 Este diretório contém a modelagem em grafo do projeto DELTA (equivalente ao schema
 relacional em SQL), o script de carga (`setup.cypher`), o loader Python para
