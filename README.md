@@ -2,7 +2,7 @@ Delta | Banco de dados em grafo com Neo4j
 
 ![Neo4j Aura](https://img.shields.io/badge/Neo4j-Aura-018BFF?logo=neo4j&logoColor=white) ![Cypher](https://img.shields.io/badge/linguagem-Cypher-333333) ![Python](https://img.shields.io/badge/loader-Python-3776AB?logo=python&logoColor=white)
 
-Modelagem em grafo do Projeto Delta, com scripts Cypher, carga de dados no Neo4j Aura e consultas de negócio por travessia de relacionamentos.
+Este repositório reúne a modelagem em grafo do Delta, scripts Cypher, carga de dados pelo loader Python e consultas de negócio no Neo4j Aura.
 
 **Tags:** `#Delta` `#Neo4j` `#Cypher` `#BancoDeDados` `#Grafo`
 
@@ -25,11 +25,6 @@ Modelagem em grafo do Projeto Delta, com scripts Cypher, carga de dados no Neo4j
 | Consultas | Arquivos em `querys/` incluem consultas de negócio e a pergunta principal do projeto. |
 
 ---
-
-Este diretório contém a modelagem em grafo do projeto DELTA (equivalente ao schema
-relacional em SQL), o script de carga (`setup.cypher`), o loader Python para
-rodar tudo de uma vez no Neo4j Aura, e as queries usadas para responder
-perguntas de negócio via *traversal* (não apenas busca por nó).
 
 > Documentação completa: [`delta-handbook/DADOS/NoSQL/modelagem-neo4j.md`](https://github.com/DELTA-docs/delta-handbook/blob/main/DADOS/NoSQL/modelagem-neo4j.md)
 
@@ -57,8 +52,7 @@ perguntas de negócio via *traversal* (não apenas busca por nó).
 (UserHabit)-[:ON_DAY]->(Day)
 ```
 
-`UserHabit` é um nó de interseção: existe porque frequência e dias da semana
-de um hábito variam **por usuário**, não pelo hábito em si.
+`UserHabit` representa a associação de um usuário com um hábito e registra a frequência e os dias da semana definidos para essa pessoa.
 
 ### Multi-labels
 
@@ -139,14 +133,14 @@ re-executado sem duplicar dados.
 
 ## Testes automatizados do loader
 
-Os testes unitários validam a divisão e execução dos comandos Cypher pelo `load_graph.py`, o uso do banco configurado e o fechamento do driver mesmo quando uma consulta falha. Eles substituem o driver por um dublê e não conectam ao Neo4j Aura.
+A suíte valida o processamento dos comandos Cypher pelo `load_graph.py`, a configuração do banco e o fechamento do driver em caso de erro. Os testes usam um driver simulado.
 
 ```bash
 pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-A análise de cobertura instrumenta somente o loader Python. Os arquivos `.cypher` não são executados por esta suite e não recebem um percentual de cobertura.
+O relatório de cobertura considera o código Python do loader.
 
 
 ## 4. Pergunta de negócio com Traversal
@@ -196,6 +190,6 @@ delta-neo4j/
       └── query4.png
 ```
 
-## Arquivos permitidos pelo loader
+## Scripts Cypher executados pelo loader
 
-O argumento seleciona um dos scripts versionados: `setup.cypher`, `seed.cypher`, `querys/querys.cypher` ou `querys/transversal.cypher`. Os caminhos sao resolvidos a partir do repositorio, independentemente do diretorio atual. Caminhos absolutos, travessia com `..`, arquivos externos e links cujo destino escape do repositorio ou deixe de ser Cypher sao rejeitados antes de ler o arquivo ou abrir o driver.
+O argumento seleciona um dos scripts versionados: `setup.cypher`, `seed.cypher`, `querys/querys.cypher` ou `querys/transversal.cypher`. O loader recebe `setup.cypher`, `seed.cypher`, `querys/querys.cypher` ou `querys/transversal.cypher`. Os caminhos são resolvidos a partir do repositório, independentemente do diretório atual.
